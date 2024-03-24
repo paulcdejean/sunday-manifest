@@ -5,6 +5,7 @@ env:
   REGISTRY_PASSWORD: ${{ github.token }}
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   IMAGE_NAME: joshua
+  IMAGE_TAG: branch-${{ github.ref_name }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,7 +25,7 @@ jobs:
       uses: redhat-actions/buildah-build@v2
       with:
         image: ${{ env.IMAGE_NAME }}
-        tags: branch-${{ github.ref_name }} ${{ github.sha }}
+        tags: ${{ env.IMAGE_TAG }} ${{ github.sha }}
         containerfiles: diamond.containerfile
     - name: Push To GHCR
       uses: redhat-actions/push-to-registry@v2
@@ -36,3 +37,5 @@ jobs:
         password: ${{ env.REGISTRY_PASSWORD }}
         extra-args: |
           --disable-content-trust
+    - name: npm build
+      run: docker run -v ${{ github.workspace }}:/ociworkshop/workspace -w /ociworkshop/workspace "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" bash -c "mv /ociworkshop/node_modules/ /ociworkshop/workspace/ && npm run build"
